@@ -113,7 +113,7 @@ public class ReviewRepo {
                 .set("posted", new Date()); // Update the posted date
 
         // Perform the update
-        return mongoTemplate.updateFirst(query, updateOps, "reviews");
+        return mongoTemplate.upsert(query, updateOps, "reviews");
     }
 
     /*
@@ -156,6 +156,7 @@ public class ReviewRepo {
         Query query = Query.query(Criteria.where("_id").is(reviewId));
         Review result = mongoTemplate.findOne(query, Review.class, "reviews");
 
+        // check if review with the queried ID exists in database
         if (result == null) {
             throw new IllegalArgumentException("Review with the given ID does not exist.");
         }

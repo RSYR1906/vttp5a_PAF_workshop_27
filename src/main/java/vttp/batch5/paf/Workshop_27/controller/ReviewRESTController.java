@@ -21,7 +21,7 @@ public class ReviewRESTController {
     private ReviewService reviewService;
 
     @GetMapping("review/{reviewId}")
-    public ResponseEntity<?> getReview(@PathVariable ObjectId reviewId) {
+    public ResponseEntity<String> getReview(@PathVariable ObjectId reviewId) {
         JsonObject review = reviewService.getReview(reviewId);
         return ResponseEntity.ok(review.toString());
     }
@@ -49,7 +49,7 @@ public class ReviewRESTController {
     }
 
     @PutMapping("/review/{reviewId}")
-    public ResponseEntity<?> updateReview(@PathVariable ObjectId reviewId,
+    public ResponseEntity<String> updateReview(@PathVariable ObjectId reviewId,
             @RequestParam Float rating,
             @RequestParam String comment) {
         try {
