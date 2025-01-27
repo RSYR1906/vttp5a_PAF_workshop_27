@@ -40,7 +40,7 @@ public class ReviewRepo {
 
         // Get the game name from Games collection using gid
         Query gameQuery = new Query(Criteria.where("gid").is(gameId));
-        Game game = mongoTemplate.findOne(gameQuery, Game.class, "games");
+        Game game = mongoTemplate.findOne(gameQuery, Game.class, "game");
 
         if (game == null) {
             throw new IllegalArgumentException("Invalid game ID: " + gameId);
