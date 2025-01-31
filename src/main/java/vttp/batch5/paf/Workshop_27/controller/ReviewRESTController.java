@@ -1,5 +1,8 @@
 package vttp.batch5.paf.Workshop_27.controller;
 
+import java.util.List;
+
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.json.JsonObject;
 import vttp.batch5.paf.Workshop_27.model.Review;
+import vttp.batch5.paf.Workshop_27.service.GameService;
 import vttp.batch5.paf.Workshop_27.service.ReviewService;
 
 @RestController
@@ -19,6 +23,9 @@ public class ReviewRESTController {
 
     @Autowired
     private ReviewService reviewService;
+
+    @Autowired
+    private GameService gameService;
 
     @GetMapping("review/{reviewId}")
     public ResponseEntity<String> getReview(@PathVariable ObjectId reviewId) {
@@ -30,6 +37,27 @@ public class ReviewRESTController {
     public ResponseEntity<?> getReviewWtihEditHistory(@PathVariable ObjectId reviewId) {
         JsonObject review = reviewService.getReviewWithEditHistory(reviewId);
         return ResponseEntity.ok(review.toString());
+    }
+
+    @GetMapping("game/{game_id}/reviews")
+    public ResponseEntity<String> getGameWithReview(@PathVariable Integer game_id) {
+        Document d = gameService.getGameWithReviews(game_id);
+        return ResponseEntity.ok(d.toJson());
+    }
+
+    @GetMapping("/games/{order}")
+    public ResponseEntity<String> getGameByRating(@PathVariable String order) {
+        List<Document> games;
+
+        if (order.equalsIgnoreCase("highest")) {
+            games = gameService.getGamesByRating(-1);
+        } else if (order.equalsIgnoreCase("lowest")) {
+            games = gameService.getGamesByRating(1);
+        } else {
+            return ResponseEntity.badRequest().body("Invalid order. Use 'highest' or 'lowest'.");
+        }
+
+        return ResponseEntity.ok(games.toString()); // Convert list to JSON string
     }
 
     @PostMapping("/review")
