@@ -18,7 +18,11 @@ public class GameService {
         return gameRepo.getGameWithReviews(gameId);
     }
 
-    public List<Document> getGamesByRating(Integer order) {
-        return gameRepo.getGamesByRating(order);
+    public List<Document> getGamesByLowestRating(Integer order) {
+        return gameRepo.getGamesByLowestRating(order);
+    }
+
+    public List<Document> getGamesByHighestRating(Integer order) {
+        return gameRepo.getGamesByHighestRating(order);
     }
 }

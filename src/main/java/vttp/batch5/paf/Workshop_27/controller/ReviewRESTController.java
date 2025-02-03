@@ -46,18 +46,18 @@ public class ReviewRESTController {
     }
 
     @GetMapping("/games/{order}")
-    public ResponseEntity<String> getGameByRating(@PathVariable String order) {
+    public ResponseEntity<?> getGameByRating(@PathVariable String order) {
         List<Document> games;
 
         if (order.equalsIgnoreCase("highest")) {
-            games = gameService.getGamesByRating(-1);
+            games = gameService.getGamesByHighestRating(-1);
         } else if (order.equalsIgnoreCase("lowest")) {
-            games = gameService.getGamesByRating(1);
+            games = gameService.getGamesByLowestRating(1);
         } else {
             return ResponseEntity.badRequest().body("Invalid order. Use 'highest' or 'lowest'.");
         }
 
-        return ResponseEntity.ok(games.toString()); // Convert list to JSON string
+        return ResponseEntity.ok(games);
     }
 
     @PostMapping("/review")

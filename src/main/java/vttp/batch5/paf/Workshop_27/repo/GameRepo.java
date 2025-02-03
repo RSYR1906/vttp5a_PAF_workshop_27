@@ -5,7 +5,6 @@ import java.util.List;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
@@ -48,11 +47,7 @@ public class GameRepo {
      * "users_rated": 1,
      * "url": 1,
      * "image": 1,
-     * "reviews": {
-     * $map: {
-     * input: "$reviews",
-     * as: "review",
-     * in: { $concat: ["/review/", { "$toString": "$$review._id" }] }
+     * "reviews": 1
      * }
      * },
      * "timestamp": { $dateToString: { format: "%Y-%m-%dT%H:%M:%SZ", date: new
@@ -103,7 +98,7 @@ public class GameRepo {
      * {
      * $group: {
      * _id: "$games.gid",
-     * name: { $first: "$games.name" },
+     * game: { $first: "$games.name" },
      * highestRating: { $max: "$rating" },
      * lowestRating: { $min: "$rating" },
      * user: { $first: "$user" },
@@ -117,21 +112,56 @@ public class GameRepo {
      * }
      * ])
      */
-    public List<Document> getGamesByRating(Integer order) {
+    public List<Document> getGamesByHighestRating(Integer order) {
         LookupOperation lookupReviews = Aggregation.lookup("games", "gameId", "gid", "games");
         AggregationOperation unwindGames = Aggregation.unwind("games");
         GroupOperation groupByRatings = Aggregation.group("$games.gid")
-                .first("games.name").as("name")
-                .max("rating").as("highestRating")
-                .min("rating").as("lowestRating")
+                .first("games.name").as("game")
+                .max("rating").as("rating")
                 .first("user").as("user")
                 .first("comment").as("comment")
                 .first("_id").as("review_id");
 
         SortOperation sortByRating = Aggregation
-                .sort(Sort.by(order == 1 ? Direction.ASC : Direction.DESC, "highestRating"));
+                .sort(Sort.by(Sort.Direction.DESC, "rating"));
+        ProjectionOperation projectFinalFields = Aggregation.project()
+                .andExpression("'highest'").as("rating")
+                .and("_id").as("gameId")
+                .and("game").as("game")
+                .and("rating").as("ratingScore")
+                .and("user").as("user")
+                .and("comment").as("comment")
+                .and("review_id").as("review_id");
 
-        Aggregation pipeline = Aggregation.newAggregation(lookupReviews, unwindGames, groupByRatings, sortByRating);
+        Aggregation pipeline = Aggregation.newAggregation(lookupReviews, unwindGames, groupByRatings, sortByRating,
+                projectFinalFields);
+
+        AggregationResults<Document> results = mongoTemplate.aggregate(pipeline, "reviews", Document.class);
+        return results.getMappedResults();
+    }
+
+    public List<Document> getGamesByLowestRating(Integer order) {
+        LookupOperation lookupReviews = Aggregation.lookup("games", "gameId", "gid", "games");
+        AggregationOperation unwindGames = Aggregation.unwind("games");
+        GroupOperation groupByRatings = Aggregation.group("$games.gid")
+                .first("games.name").as("game")
+                .min("rating").as("rating")
+                .first("user").as("user")
+                .first("comment").as("comment")
+                .first("_id").as("review_id");
+
+        SortOperation sortByRating = Aggregation
+                .sort(Sort.by(Sort.Direction.ASC, "rating"));
+        ProjectionOperation projectFinalFields = Aggregation.project()
+                .andExpression("'lowest'").as("rating")
+                .and("_id").as("gameId")
+                .and("game").as("game")
+                .and("rating").as("ratingScore")
+                .and("user").as("user")
+                .and("comment").as("comment")
+                .and("review_id").as("review_id");
+        Aggregation pipeline = Aggregation.newAggregation(lookupReviews, unwindGames, groupByRatings, sortByRating,
+                projectFinalFields);
 
         AggregationResults<Document> results = mongoTemplate.aggregate(pipeline, "reviews", Document.class);
         return results.getMappedResults();
